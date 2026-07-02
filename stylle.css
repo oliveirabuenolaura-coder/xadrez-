@@ -1,0 +1,29 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #2f3542;
+    color: white;
+    font-family: sans-serif;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    border: 4px solid #333;
+}
+
+.square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Cores das casas */
+.light { background-color: #f0d9b5; }
+.dark { background-color: #b58863; }
+.selected { background-color: #7a9a60 !important; }
