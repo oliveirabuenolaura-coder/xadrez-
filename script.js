@@ -1,12 +1,8 @@
 const board = document.getElementById('board');
+const statusBar = document.getElementById('status-bar');
 
-// Cria um elemento de texto para avisar de quem é a vez
-const turnIndicator = document.createElement('h3');
-turnIndicator.innerText = "Vez das Brancas (Peças Claras)";
-document.body.insertBefore(turnIndicator, board);
-
-// Matriz inicial do tabuleiro
-const initialBoard = [
+// Posição inicial padrão das peças
+const defaultBoard = [
     ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
     ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
     ['', '', '', '', '', '', '', ''],
@@ -17,12 +13,14 @@ const initialBoard = [
     ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
 ];
 
-// Lista de peças brancas e pretas para validação de turno
+// Copia o tabuleiro inicial para a partida atual
+let currentBoard = JSON.parse(JSON.stringify(defaultBoard));
+
 const whitePieces = ['♙', '♖', '♘', '♗', '♕', '♔'];
 const blackPieces = ['♟', '♜', '♞', '♝', '♛', '♚'];
 
 let selectedSquare = null;
-let currentTurn = 'white'; // O jogo sempre começa com as brancas
+let currentTurn = 'white';
 
 function createBoard() {
     board.innerHTML = ''; 
@@ -38,7 +36,7 @@ function createBoard() {
                 square.classList.add('dark');
             }
             
-            square.innerText = initialBoard[r][c];
+            square.innerText = currentBoard[r][c];
             square.dataset.row = r;
             square.dataset.col = c;
             
@@ -54,56 +52,71 @@ function handleSquareClick(event) {
     const c = parseInt(clickedSquare.dataset.col);
     const piece = clickedSquare.innerText;
     
-    // SE JÁ TIVER UMA PEÇA SELECIONADA (Tentando mover)
+    // Atualiza o texto do turno padrão caso estivesse mostrando um erro antes
+    updateStatusText();
+
     if (selectedSquare) {
         const fromRow = parseInt(selectedSquare.dataset.row);
         const fromCol = parseInt(selectedSquare.dataset.col);
         
-        // Se o jogador clicar na própria peça selecionada de novo, ele desmarca ela
         if (clickedSquare === selectedSquare) {
             selectedSquare.classList.remove('selected');
             selectedSquare = null;
             return;
         }
 
-        // Move a peça na matriz lógica
-        initialBoard[r][c] = initialBoard[fromRow][fromCol];
-        initialBoard[fromRow][fromCol] = '';
+        // Executa o movimento
+        currentBoard[r][c] = currentBoard[fromRow][fromCol];
+        currentBoard[fromRow][fromCol] = '';
         
-        // Limpa a seleção
         selectedSquare.classList.remove('selected');
         selectedSquare = null;
         
-        // Alterna o turno
-        if (currentTurn === 'white') {
-            currentTurn = 'black';
-            turnIndicator.innerText = "Vez das Pretas (Peças Escuras)";
-        } else {
-            currentTurn = 'white';
-            turnIndicator.innerText = "Vez das Brancas (Peças Claras)";
-        }
-        
-        // Redesenha o tabuleiro com a nova posição
+        // Passa o turno
+        currentTurn = currentTurn === 'white' ? 'black' : 'white';
+        updateStatusText();
         createBoard();
         
     } else {
-        // SE NÃO TIVER SELEÇÃO (Tentando escolher uma peça)
         if (piece !== '') {
-            // Verifica se a peça clicada pertence ao jogador do turno atual
+            // Validação de turno sem travar a tela com alert()
             if (currentTurn === 'white' && !whitePieces.includes(piece)) {
-                alert("Não é a sua vez! É a vez das peças Brancas.");
+                showTemporaryMessage("❌ Movimento inválido! É a vez das Brancas.");
                 return;
             }
             if (currentTurn === 'black' && !blackPieces.includes(piece)) {
-                alert("Não é a sua vez! É a vez das peças Pretas.");
+                showTemporaryMessage("❌ Movimento inválido! É a vez das Pretas.");
                 return;
             }
 
-            // Seleciona a peça legitimamente
             selectedSquare = clickedSquare;
             clickedSquare.classList.add('selected');
         }
     }
+}
+
+function updateStatusText() {
+    if (currentTurn === 'white') {
+        statusBar.style.color = '#f1f2f6';
+        statusBar.innerText = "Vez das Brancas (Peças Claras)";
+    } else {
+        statusBar.style.color = '#ffa502'; // Um toque de cor diferenciado para as pretas
+        statusBar.innerText = "Vez das Pretas (Peças Escuras)";
+    }
+}
+
+function showTemporaryMessage(msg) {
+    statusBar.style.color = '#ff4757'; // Vermelho para erro
+    statusBar.innerText = msg;
+}
+
+// Função do botão de Reiniciar
+function resetGame() {
+    currentBoard = JSON.parse(JSON.stringify(defaultBoard));
+    currentTurn = 'white';
+    selectedSquare = null;
+    updateStatusText();
+    createBoard();
 }
 
 // Inicializa o jogo
