@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xadrez Web</title>
+    <title>Xadrez Web Pró</title>
     <style>
         body {
             display: flex;
@@ -12,11 +12,18 @@
             background-color: #2f3542;
             color: white;
             font-family: Arial, sans-serif;
-            margin-top: 50px;
+            margin-top: 30px;
         }
 
-        h1 {
-            margin-bottom: 20px;
+        h1 { margin-bottom: 5px; }
+
+        /* Estilo do aviso de turnos e erros */
+        #status-bar {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            height: 25px;
+            color: #f1f2f6;
         }
 
         #board {
@@ -34,25 +41,50 @@
             font-size: 45px;
             cursor: pointer;
             user-select: none;
-            transition: background-color 0.2s;
+            transition: background-color 0.15s;
         }
 
-        .light {
-            background-color: #f0d9b5;
+        .light { background-color: #f0d9b5; }
+        .dark { background-color: #b58863; }
+        
+        /* Efeito de passar o mouse por cima */
+        .square:hover {
+            background-color: #d4bc96 !important;
+        }
+        .dark:hover {
+            background-color: #9c724e !important;
         }
 
-        .dark {
-            background-color: #b58863;
-        }
-
+        /* Peça selecionada */
         .selected {
             background-color: #7a9a60 !important;
+        }
+
+        /* Botão de reiniciar */
+        #reset-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        #reset-btn:hover {
+            background-color: #ff6b81;
         }
     </style>
 </head>
 <body>
     <h1>Xadrez Web</h1>
+    <div id="status-bar">Vez das Brancas (Peças Claras)</div>
     <div id="board"></div>
+    <button id="reset-btn" onclick="resetGame()">Reiniciar Jogo</button>
+
     <script src="script.js"></script>
 </body>
 </html>
