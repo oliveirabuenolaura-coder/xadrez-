@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xadrez Web Pró</title>
+    <title>Xadrez Web Completo</title>
     <style>
         body {
             display: flex;
@@ -17,7 +17,6 @@
 
         h1 { margin-bottom: 5px; }
 
-        /* Estilo do aviso de turnos e erros */
         #status-bar {
             margin-bottom: 15px;
             font-size: 1.2rem;
@@ -47,20 +46,11 @@
         .light { background-color: #f0d9b5; }
         .dark { background-color: #b58863; }
         
-        /* Efeito de passar o mouse por cima */
-        .square:hover {
-            background-color: #d4bc96 !important;
-        }
-        .dark:hover {
-            background-color: #9c724e !important;
-        }
+        .square:hover { background-color: #d4bc96 !important; }
+        .dark:hover { background-color: #9c724e !important; }
 
-        /* Peça selecionada */
-        .selected {
-            background-color: #7a9a60 !important;
-        }
+        .selected { background-color: #7a9a60 !important; }
 
-        /* Botão de reiniciar */
         #reset-btn {
             margin-top: 20px;
             padding: 10px 20px;
@@ -73,18 +63,130 @@
             font-weight: bold;
             transition: 0.2s;
         }
-
-        #reset-btn:hover {
-            background-color: #ff6b81;
-        }
+        #reset-btn:hover { background-color: #ff6b81; }
     </style>
 </head>
 <body>
+
     <h1>Xadrez Web</h1>
     <div id="status-bar">Vez das Brancas (Peças Claras)</div>
     <div id="board"></div>
     <button id="reset-btn" onclick="resetGame()">Reiniciar Jogo</button>
 
-    <script src="script.js"></script>
+    <script>
+        const board = document.getElementById('board');
+        const statusBar = document.getElementById('status-bar');
+
+        const defaultBoard = [
+            ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+            ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+            ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+        ];
+
+        let currentBoard = JSON.parse(JSON.stringify(defaultBoard));
+        const whitePieces = ['♙', '♖', '♘', '♗', '♕', '♔'];
+        const blackPieces = ['♟', '♜', '♞', '♝', '♛', '♚'];
+
+        let selectedSquare = null;
+        let currentTurn = 'white';
+
+        function createBoard() {
+            board.innerHTML = ''; 
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    
+                    if ((r + c) % 2 === 0) {
+                        square.classList.add('light');
+                    } else {
+                        square.classList.add('dark');
+                    }
+                    
+                    square.innerText = currentBoard[r][c];
+                    square.dataset.row = r;
+                    square.dataset.col = c;
+                    
+                    square.addEventListener('click', handleSquareClick);
+                    board.appendChild(square);
+                }
+            }
+        }
+
+        function handleSquareClick(event) {
+            const clickedSquare = event.currentTarget;
+            const r = parseInt(clickedSquare.dataset.row);
+            const c = parseInt(clickedSquare.dataset.col);
+            const piece = clickedSquare.innerText;
+            
+            updateStatusText();
+
+            if (selectedSquare) {
+                const fromRow = parseInt(selectedSquare.dataset.row);
+                const fromCol = parseInt(selectedSquare.dataset.col);
+                
+                if (clickedSquare === selectedSquare) {
+                    selectedSquare.classList.remove('selected');
+                    selectedSquare = null;
+                    return;
+                }
+
+                currentBoard[r][c] = currentBoard[fromRow][fromCol];
+                currentBoard[fromRow][fromCol] = '';
+                
+                selectedSquare.classList.remove('selected');
+                selectedSquare = null;
+                
+                currentTurn = currentTurn === 'white' ? 'black' : 'white';
+                updateStatusText();
+                createBoard();
+                
+            } else {
+                if (piece !== '') {
+                    if (currentTurn === 'white' && !whitePieces.includes(piece)) {
+                        showTemporaryMessage("❌ Movimento inválido! É a vez das Brancas.");
+                        return;
+                    }
+                    if (currentTurn === 'black' && !blackPieces.includes(piece)) {
+                        showTemporaryMessage("❌ Movimento inválido! É a vez das Pretas.");
+                        return;
+                    }
+
+                    selectedSquare = clickedSquare;
+                    clickedSquare.classList.add('selected');
+                }
+            }
+        }
+
+        function updateStatusText() {
+            if (currentTurn === 'white') {
+                statusBar.style.color = '#f1f2f6';
+                statusBar.innerText = "Vez das Brancas (Peças Claras)";
+            } else {
+                statusBar.style.color = '#ffa502';
+                statusBar.innerText = "Vez das Pretas (Peças Escuras)";
+            }
+        }
+
+        function showTemporaryMessage(msg) {
+            statusBar.style.color = '#ff4757';
+            statusBar.innerText = msg;
+        }
+
+        function resetGame() {
+            currentBoard = JSON.parse(JSON.stringify(defaultBoard));
+            currentTurn = 'white';
+            selectedSquare = null;
+            updateStatusText();
+            createBoard();
+        }
+
+        createBoard();
+    </script>
 </body>
 </html>
