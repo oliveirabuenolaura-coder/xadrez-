@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +6,6 @@
     <title>Xadrez</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
-        /* Fundo um pouco mais claro e suave */
         body {
             display: flex;
             flex-direction: column;
@@ -24,7 +22,6 @@
             font-weight: 600;
         }
 
-        /* Painel de Jogadores */
         #players-panel {
             display: flex;
             gap: 20px;
@@ -40,7 +37,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Indicador de quem está jogando com brilho suave */
         .active-player {
             background-color: #81b64c !important;
             color: #fff;
@@ -56,7 +52,6 @@
             color: #f1f2f6;
         }
 
-        /* Moldura de madeira ao redor do tabuleiro */
         #board-wrapper {
             padding: 12px;
             background-color: #2b1d13;
@@ -64,7 +59,6 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* Tabuleiro */
         #board {
             display: grid;
             grid-template-columns: repeat(8, 65px);
@@ -81,7 +75,6 @@
             position: relative;
         }
 
-        /* Imagens das peças com sombra */
         .square img {
             width: 56px;
             height: 56px;
@@ -91,28 +84,23 @@
             transition: transform 0.1s ease;
         }
 
-        /* Efeito de leve flutuação ao passar o mouse na peça */
         .square:hover img {
             transform: scale(1.05);
         }
 
-        /* Cores de Tabuleiro */
         .light { background-color: #f0d9b5; }
         .dark { background-color: #b58863; }
         
         .square:hover { filter: brightness(95%); }
 
-        /* Casa selecionada */
         .selected {
             background-color: rgba(247, 247, 105, 0.6) !important;
         }
 
-        /* Último movimento feito */
         .last-move {
             background-color: rgba(186, 202, 43, 0.5) !important;
         }
 
-        /* Botão de reiniciar */
         #reset-btn {
             margin-top: 20px;
             padding: 10px 25px;
@@ -227,6 +215,14 @@
             if (selectedSquare) {
                 const fromSquare = selectedSquare.dataset.square;
                 
+                // Se clicar na mesma peça, desmarca
+                if (fromSquare === squareCoord) {
+                    selectedSquare.classList.remove('selected');
+                    selectedSquare = null;
+                    return;
+                }
+
+                // Tenta fazer o movimento (inclusive capturas)
                 const move = chess.move({
                     from: fromSquare,
                     to: squareCoord,
@@ -234,16 +230,22 @@
                 });
 
                 if (move === null) {
-                    showTemporaryMessage("❌ Movimento ilegal!");
-                    selectedSquare.classList.remove('selected');
-                    selectedSquare = null;
+                    // Se o clique foi em outra peça do próprio jogador da vez, muda a seleção para ela
+                    const piece = chess.get(squareCoord);
+                    if (piece && piece.color === chess.turn()) {
+                        selectedSquare.classList.remove('selected');
+                        selectedSquare = clickedSquare;
+                        clickedSquare.classList.add('selected');
+                    } else {
+                        showTemporaryMessage("❌ Movimento ilegal!");
+                        selectedSquare.classList.remove('selected');
+                        selectedSquare = null;
+                    }
                     return;
                 }
                 
                 lastMoveSquares = [fromSquare, squareCoord];
-                
                 playMoveSound();
-                selectedSquare.classList.remove('selected');
                 selectedSquare = null;
                 createBoard();
                 
