@@ -4,238 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xadrez Web Oficial</title>
+    <title>Xadrez Web Realista</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
+        /* Fundo escuro e elegante */
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #2f3542;
-            color: white;
-            font-family: Arial, sans-serif;
-            margin-top: 20px;
+            background-color: #161512;
+            color: #bababa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin-top: 15px;
         }
 
-        h1 { margin-bottom: 5px; }
+        h1 { 
+            margin-bottom: 5px; 
+            color: #fff;
+            font-weight: 600;
+        }
 
+        /* Painel de Jogadores moderno */
         #players-panel {
             display: flex;
-            gap: 40px;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
+            gap: 20px;
+            margin-bottom: 15px;
         }
 
         .player {
-            padding: 5px 15px;
-            border-radius: 4px;
-            background-color: #3f4451;
+            padding: 8px 20px;
+            border-radius: 6px;
+            background-color: #262522;
+            border: 1px solid #3d3b37;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
         }
 
+        /* Indicador de quem está jogando com brilho suave */
         .active-player {
-            background-color: #2ed573 !important;
-            color: black;
+            background-color: #81b64c !important;
+            color: #fff;
             font-weight: bold;
+            box-shadow: 0 0 15px rgba(129, 182, 76, 0.4);
+            border-color: #81b64c;
         }
 
         #status-bar {
             margin-bottom: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            height: 25px;
-            color: #f1f2f6;
-        }
-
-        #board {
-            display: grid;
-            grid-template-columns: repeat(8, 60px);
-            grid-template-rows: repeat(8, 60px);
-            border: 4px solid #1e222b;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-
-        .square {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            transition: background-color 0.15s;
-        }
-
-        /* Imagens das peças se ajustando ao tamanho da casa */
-        .square img {
-            width: 50px;
-            height: 50px;
-            pointer-events: none; /* Evita que o clique pegue na imagem em vez da célula */
-        }
-
-        .light { background-color: #f0d9b5; }
-        .dark { background-color: #b58863; }
         
-        .square:hover { background-color: #d4bc96 !important; }
-        .dark:hover { background-color: #9c724e !important; }
-
-        .selected { background-color: #7a9a60 !important; }
-
-        #reset-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #ff4757;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        #reset-btn:hover { background-color: #ff6b81; }
-    </style>
-</head>
-<body>
-
-    <h1>Xadrez Web</h1>
-    
-    <div id="players-panel">
-        <div id="p1" class="player active-player">⚪ JOGADOR 1 (Brancas)</div>
-        <div id="p2" class="player">⚫ JOGADOR 2 (Pretas)</div>
-    </div>
-
-    <div id="status-bar">Sua vez, Jogador 1!</div>
-    <div id="board"></div>
-    <button id="reset-btn" onclick="resetGame()">Reiniciar Jogo</button>
-
-    <script>
-        const boardHtml = document.getElementById('board');
-        const statusBar = document.getElementById('status-bar');
-        const p1Div = document.getElementById('p1');
-        const p2Div = document.getElementById('p2');
-        
-        let chess = new Chess();
-
-        // Links de imagens padronizadas do xadrez (Wikipedia) para garantir cores perfeitas
-        const pieceImages = {
-            'p': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg' },
-            'r': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg' },
-            'n': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg' },
-            'b': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg' },
-            'q': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg' },
-            'k': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg' }
-        };
-
-        const columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        const rows = ['8', '7', '6', '5', '4', '3', '2', '1'];
-        let selectedSquare = null;
-
-        function createBoard() {
-            boardHtml.innerHTML = ''; 
-            const boardState = chess.board();
-
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const square = document.createElement('div');
-                    square.classList.add('square');
-                    
-                    if ((r + c) % 2 === 0) {
-                        square.classList.add('light');
-                    } else {
-                        square.classList.add('dark');
-                    }
-                    
-                    const piece = boardState[r][c];
-                    if (piece) {
-                        // Cria uma tag <img> com a imagem correta da peça branca ou preta
-                        const img = document.createElement('img');
-                        img.src = pieceImages[piece.type][piece.color];
-                        square.appendChild(img);
-                    }
-                    
-                    square.dataset.square = columns[c] + rows[r];
-                    square.addEventListener('click', handleSquareClick);
-                    boardHtml.appendChild(square);
-                }
-            }
-            updateStatusText();
-        }
-
-        function handleSquareClick(event) {
-            const clickedSquare = event.currentTarget;
-            const squareCoord = clickedSquare.dataset.square;
-            
-            if (selectedSquare) {
-                const fromSquare = selectedSquare.dataset.square;
-                
-                const move = chess.move({
-                    from: fromSquare,
-                    to: squareCoord,
-                    promotion: 'q'
-                });
-
-                if (move === null) {
-                    showTemporaryMessage("❌ Movimento ilegal para esta peça!");
-                    selectedSquare.classList.remove('selected');
-                    selectedSquare = null;
-                    return;
-                }
-                
-                selectedSquare.classList.remove('selected');
-                selectedSquare = null;
-                createBoard();
-                
-            } else {
-                const piece = chess.get(squareCoord);
-                if (piece && piece.color === chess.turn()) {
-                    selectedSquare = clickedSquare;
-                    clickedSquare.classList.add('selected');
-                } else if (piece) {
-                    const donodaVez = chess.turn() === 'w' ? "Jogador 1 (Brancas)" : "Jogador 2 (Pretas)";
-                    showTemporaryMessage(`❌ É a vez do ${donodaVez}!`);
-                }
-            }
-        }
-
-        function updateStatusText() {
-            p1Div.classList.remove('active-player');
-            p2Div.classList.remove('active-player');
-
-            if (chess.in_checkmate()) {
-                statusBar.style.color = '#ff4757';
-                const vencedor = chess.turn() === 'w' ? "Jogador 2 (Pretas)" : "Jogador 1 (Brancas)";
-                statusBar.innerText = `👑 XEQUE-MATE! Vitória do ${vencedor}!`;
-                return;
-            }
-            
-            if (chess.in_draw()) {
-                statusBar.style.color = '#ccc';
-                statusBar.innerText = "🤝 Jogo Empatado!";
-                return;
-            }
-
-            if (chess.turn() === 'w') {
-                p1Div.classList.add('active-player');
-                statusBar.style.color = '#f1f2f6';
-                statusBar.innerText = chess.in_check() ? "⚠️ Rei em Xeque! Sua vez, Jogador 1" : "Sua vez, Jogador 1";
-            } else {
-                p2Div.classList.add('active-player');
-                statusBar.style.color = '#ffa502';
-                statusBar.innerText = chess.in_check() ? "⚠️ Rei em Xeque! Sua vez, Jogador 2" : "Sua vez, Jogador 2";
-            }
-        }
-
-        function showTemporaryMessage(msg) {
-            statusBar.style.color = '#ff4757';
-            statusBar.innerText = msg;
-            setTimeout(updateStatusText, 2000);
-        }
-
-        function resetGame() {
-            chess.reset();
-            selectedSquare = null;
-            createBoard();
-        }
-
-        createBoard();
-    </script>
-</body>
-</html>
