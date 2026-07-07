@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -18,7 +19,6 @@
 
         h1 { margin-bottom: 5px; }
 
-        /* Painel com o nome dos jogadores */
         #players-panel {
             display: flex;
             gap: 40px;
@@ -58,10 +58,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 45px;
             cursor: pointer;
             user-select: none;
             transition: background-color 0.15s;
+        }
+
+        /* Imagens das peças se ajustando ao tamanho da casa */
+        .square img {
+            width: 50px;
+            height: 50px;
+            pointer-events: none; /* Evita que o clique pegue na imagem em vez da célula */
         }
 
         .light { background-color: #f0d9b5; }
@@ -92,8 +98,8 @@
     <h1>Xadrez Web</h1>
     
     <div id="players-panel">
-        <div id="p1" class="player active-player">👤 JOGADOR 1 (Brancas)</div>
-        <div id="p2" class="player">👤 JOGADOR 2 (Pretas)</div>
+        <div id="p1" class="player active-player">⚪ JOGADOR 1 (Brancas)</div>
+        <div id="p2" class="player">⚫ JOGADOR 2 (Pretas)</div>
     </div>
 
     <div id="status-bar">Sua vez, Jogador 1!</div>
@@ -106,16 +112,16 @@
         const p1Div = document.getElementById('p1');
         const p2Div = document.getElementById('p2');
         
-        // Inicializa o motor de regras
         let chess = new Chess();
 
-        const pieceEmojis = {
-            'p': { 'w': '♙', 'b': '♟' },
-            'r': { 'w': '♖', 'b': '♜' },
-            'n': { 'w': '♘', 'b': '♞' },
-            'b': { 'w': '♗', 'b': '♝' },
-            'q': { 'w': '♕', 'b': '♛' },
-            'k': { 'w': '♔', 'b': '♚' }
+        // Links de imagens padronizadas do xadrez (Wikipedia) para garantir cores perfeitas
+        const pieceImages = {
+            'p': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg' },
+            'r': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg' },
+            'n': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg' },
+            'b': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg' },
+            'q': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg' },
+            'k': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg' }
         };
 
         const columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -139,9 +145,10 @@
                     
                     const piece = boardState[r][c];
                     if (piece) {
-                        square.innerText = pieceEmojis[piece.type][piece.color];
-                    } else {
-                        square.innerText = '';
+                        // Cria uma tag <img> com a imagem correta da peça branca ou preta
+                        const img = document.createElement('img');
+                        img.src = pieceImages[piece.type][piece.color];
+                        square.appendChild(img);
                     }
                     
                     square.dataset.square = columns[c] + rows[r];
@@ -159,14 +166,12 @@
             if (selectedSquare) {
                 const fromSquare = selectedSquare.dataset.square;
                 
-                // Executa a jogada na biblioteca de regras
                 const move = chess.move({
                     from: fromSquare,
                     to: squareCoord,
                     promotion: 'q'
                 });
 
-                // Se o movimento que você tentou fazer NÃO seguir a regra real do xadrez, ele bloqueia
                 if (move === null) {
                     showTemporaryMessage("❌ Movimento ilegal para esta peça!");
                     selectedSquare.classList.remove('selected');
@@ -180,7 +185,6 @@
                 
             } else {
                 const piece = chess.get(squareCoord);
-                // Só deixa selecionar se a peça for da cor do jogador da vez
                 if (piece && piece.color === chess.turn()) {
                     selectedSquare = clickedSquare;
                     clickedSquare.classList.add('selected');
@@ -192,7 +196,6 @@
         }
 
         function updateStatusText() {
-            // Remove o destaque visual de ambos
             p1Div.classList.remove('active-player');
             p2Div.classList.remove('active-player');
 
@@ -210,11 +213,11 @@
             }
 
             if (chess.turn() === 'w') {
-                p1Div.classList.add('active-player'); // Destaca o Jogador 1 em verde
+                p1Div.classList.add('active-player');
                 statusBar.style.color = '#f1f2f6';
                 statusBar.innerText = chess.in_check() ? "⚠️ Rei em Xeque! Sua vez, Jogador 1" : "Sua vez, Jogador 1";
             } else {
-                p2Div.classList.add('active-player'); // Destaca o Jogador 2 em verde
+                p2Div.classList.add('active-player');
                 statusBar.style.color = '#ffa502';
                 statusBar.innerText = chess.in_check() ? "⚠️ Rei em Xeque! Sua vez, Jogador 2" : "Sua vez, Jogador 2";
             }
