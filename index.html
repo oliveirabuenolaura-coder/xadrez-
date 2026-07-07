@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xadrez Web Realista</title>
+    <title>Grandmaster Chess</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
         /* Fundo escuro e elegante */
@@ -51,4 +51,258 @@
 
         #status-bar {
             margin-bottom: 15px;
+            font-size: 1.1rem;
+            height: 25px;
+            color: #bababa;
+        }
+
+        /* Moldura de madeira realista ao redor do tabuleiro */
+        #board-wrapper {
+            padding: 12px;
+            background-color: #2b1d13;
+            border-radius: 8px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7), inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Tabuleiro com tamanho padrão maior e cores estilo torneio */
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 65px);
+            grid-template-rows: repeat(8, 65px);
+            border: 2px solid #1a110b;
+        }
+
+        .square {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        /* Imagens das peças com sombra leve para parecerem 3D */
+        .square img {
+            width: 56px;
+            height: 56px;
+            pointer-events: none;
+            z-index: 2;
+            filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.35));
+            transition: transform 0.1s ease;
+        }
+
+        /* Efeito de leve flutuação ao passar o mouse na peça */
+        .square:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Cores de Tabuleiro Profissional (Estilo Madeira Clara / Escura) */
+        .light { background-color: #f0d9b5; }
+        .dark { background-color: #b58863; }
         
+        /* Destaque suave ao passar o mouse nas casas */
+        .square:hover { filter: brightness(95%); }
+
+        /* Casa selecionada (Tom amarelo translúcido realista) */
+        .selected {
+            background-color: rgba(247, 247, 105, 0.6) !important;
+        }
+
+        /* Último movimento feito (Destaque sutil para ficar realista) */
+        .last-move {
+            background-color: rgba(186, 202, 43, 0.5) !important;
+        }
+
+        /* Botão de reiniciar elegante */
+        #reset-btn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            font-size: 15px;
+            background-color: #312e2b;
+            color: #dde1e6;
+            border: 1px solid #45413c;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        #reset-btn:hover {
+            background-color: #45413c;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Grandmaster Chess</h1>
+    
+    <div id="players-panel">
+        <div id="p1" class="player active-player">⚪ JOGADOR 1 (Brancas)</div>
+        <div id="p2" class="player">⚫ JOGADOR 2 (Pretas)</div>
+    </div>
+
+    <div id="status-bar">Sua vez, Jogador 1!</div>
+
+    <div id="board-wrapper">
+        <div id="board"></div>
+    </div>
+
+    <button id="reset-btn" onclick="resetGame()">Reiniciar Jogo</button>
+
+    <script>
+        const boardHtml = document.getElementById('board');
+        const statusBar = document.getElementById('status-bar');
+        const p1Div = document.getElementById('p1');
+        const p2Div = document.getElementById('p2');
+        
+        let chess = new Chess();
+        let selectedSquare = null;
+        let lastMoveSquares = [];
+
+        // Som de peça mexendo gerado por código (sintetizador nativo do navegador)
+        function playMoveSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(120, ctx.currentTime);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+        }
+
+        const pieceImages = {
+            'p': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg' },
+            'r': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg' },
+            'n': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg' },
+            'b': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg' },
+            'q': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg' },
+            'k': { 'w': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg', 'b': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg' }
+        };
+
+        const columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        const rows = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+        function createBoard() {
+            boardHtml.innerHTML = ''; 
+            const boardState = chess.board();
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    
+                    if ((r + c) % 2 === 0) {
+                        square.classList.add('light');
+                    } else {
+                        square.classList.add('dark');
+                    }
+                    
+                    const squareCoord = columns[c] + rows[r];
+                    square.dataset.square = squareCoord;
+
+                    if (lastMoveSquares.includes(squareCoord)) {
+                        square.classList.add('last-move');
+                    }
+                    
+                    const piece = boardState[r][c];
+                    if (piece) {
+                        const img = document.createElement('img');
+                        img.src = pieceImages[piece.type][piece.color];
+                        square.appendChild(img);
+                    }
+                    
+                    square.addEventListener('click', handleSquareClick);
+                    boardHtml.appendChild(square);
+                }
+            }
+            updateStatusText();
+        }
+
+        function handleSquareClick(event) {
+            const clickedSquare = event.currentTarget;
+            const squareCoord = clickedSquare.dataset.square;
+            
+            if (selectedSquare) {
+                const fromSquare = selectedSquare.dataset.square;
+                
+                const move = chess.move({
+                    from: fromSquare,
+                    to: squareCoord,
+                    promotion: 'q'
+                });
+
+                if (move === null) {
+                    showTemporaryMessage("❌ Movimento ilegal!");
+                    selectedSquare.classList.remove('selected');
+                    selectedSquare = null;
+                    return;
+                }
+                
+                lastMoveSquares = [fromSquare, squareCoord];
+                
+                playMoveSound();
+                selectedSquare.classList.remove('selected');
+                selectedSquare = null;
+                createBoard();
+                
+            } else {
+                const piece = chess.get(squareCoord);
+                if (piece && piece.color === chess.turn()) {
+                    selectedSquare = clickedSquare;
+                    clickedSquare.classList.add('selected');
+                } else if (piece) {
+                    const dono = chess.turn() === 'w' ? "Jogador 1" : "Jogador 2";
+                    showTemporaryMessage(`❌ É a vez do ${dono}!`);
+                }
+            }
+        }
+
+        function updateStatusText() {
+            p1Div.classList.remove('active-player');
+            p2Div.classList.remove('active-player');
+
+            if (chess.in_checkmate()) {
+                statusBar.style.color = '#ff4757';
+                const vencedor = chess.turn() === 'w' ? "Jogador 2 (Pretas)" : "Jogador 1 (Brancas)";
+                statusBar.innerText = `👑 XEQUE-MATE! Vitória do ${vencedor}!`;
+                return;
+            }
+            
+            if (chess.in_draw()) {
+                statusBar.style.color = '#ccc';
+                statusBar.innerText = "🤝 Jogo Empatado!";
+                return;
+            }
+
+            if (chess.turn() === 'w') {
+                p1Div.classList.add('active-player');
+                statusBar.style.color = '#bababa';
+                statusBar.innerText = chess.in_check() ? "⚠️ Rei em Xeque! Sua vez, Jogador 1" : "Sua vez, Jogador 1";
+            } else {
+                p2Div.classList.add('active-player');
+                statusBar.style.color = '#bababa';
+                statusBar.innerText = chess.in_check() ? "⚠️ Rei em Xeque! Sua vez, Jogador 2" : "Sua vez, Jogador 2";
+            }
+        }
+
+        function showTemporaryMessage(msg) {
+            statusBar.style.color = '#ff4757';
+            statusBar.innerText = msg;
+            setTimeout(updateStatusText, 1500);
+        }
+
+        function resetGame() {
+            chess.reset();
+            selectedSquare = null;
+            lastMoveSquares = [];
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
