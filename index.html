@@ -4,16 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grandmaster Chess</title>
+    <title>Xadrez</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
-        /* Fundo escuro e elegante */
+        /* Fundo um pouco mais claro e suave */
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #161512;
-            color: #bababa;
+            background-color: #2f3542;
+            color: #f1f2f6;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin-top: 15px;
         }
@@ -24,7 +24,7 @@
             font-weight: 600;
         }
 
-        /* Painel de Jogadores moderno */
+        /* Painel de Jogadores */
         #players-panel {
             display: flex;
             gap: 20px;
@@ -34,8 +34,8 @@
         .player {
             padding: 8px 20px;
             border-radius: 6px;
-            background-color: #262522;
-            border: 1px solid #3d3b37;
+            background-color: #3f4451;
+            border: 1px solid #57606f;
             font-size: 0.95rem;
             transition: all 0.3s ease;
         }
@@ -53,18 +53,18 @@
             margin-bottom: 15px;
             font-size: 1.1rem;
             height: 25px;
-            color: #bababa;
+            color: #f1f2f6;
         }
 
-        /* Moldura de madeira realista ao redor do tabuleiro */
+        /* Moldura de madeira ao redor do tabuleiro */
         #board-wrapper {
             padding: 12px;
             background-color: #2b1d13;
             border-radius: 8px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.7), inset 0 0 10px rgba(0,0,0,0.5);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* Tabuleiro com tamanho padrão maior e cores estilo torneio */
+        /* Tabuleiro */
         #board {
             display: grid;
             grid-template-columns: repeat(8, 65px);
@@ -81,7 +81,7 @@
             position: relative;
         }
 
-        /* Imagens das peças com sombra leve para parecerem 3D */
+        /* Imagens das peças com sombra */
         .square img {
             width: 56px;
             height: 56px;
@@ -96,45 +96,44 @@
             transform: scale(1.05);
         }
 
-        /* Cores de Tabuleiro Profissional (Estilo Madeira Clara / Escura) */
+        /* Cores de Tabuleiro */
         .light { background-color: #f0d9b5; }
         .dark { background-color: #b58863; }
         
-        /* Destaque suave ao passar o mouse nas casas */
         .square:hover { filter: brightness(95%); }
 
-        /* Casa selecionada (Tom amarelo translúcido realista) */
+        /* Casa selecionada */
         .selected {
             background-color: rgba(247, 247, 105, 0.6) !important;
         }
 
-        /* Último movimento feito (Destaque sutil para ficar realista) */
+        /* Último movimento feito */
         .last-move {
             background-color: rgba(186, 202, 43, 0.5) !important;
         }
 
-        /* Botão de reiniciar elegante */
+        /* Botão de reiniciar */
         #reset-btn {
             margin-top: 20px;
             padding: 10px 25px;
             font-size: 15px;
-            background-color: #312e2b;
+            background-color: #57606f;
             color: #dde1e6;
-            border: 1px solid #45413c;
+            border: 1px solid #747d8c;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.2s;
         }
         #reset-btn:hover {
-            background-color: #45413c;
+            background-color: #747d8c;
             color: #fff;
         }
     </style>
 </head>
 <body>
 
-    <h1>Grandmaster Chess</h1>
+    <h1>Xadrez</h1>
     
     <div id="players-panel">
         <div id="p1" class="player active-player">⚪ JOGADOR 1 (Brancas)</div>
@@ -159,7 +158,6 @@
         let selectedSquare = null;
         let lastMoveSquares = [];
 
-        // Som de peça mexendo gerado por código (sintetizador nativo do navegador)
         function playMoveSound() {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
@@ -280,11 +278,11 @@
 
             if (chess.turn() === 'w') {
                 p1Div.classList.add('active-player');
-                statusBar.style.color = '#bababa';
+                statusBar.style.color = '#f1f2f6';
                 statusBar.innerText = chess.in_check() ? "⚠️ Rei em Xeque! Sua vez, Jogador 1" : "Sua vez, Jogador 1";
             } else {
                 p2Div.classList.add('active-player');
-                statusBar.style.color = '#bababa';
+                statusBar.style.color = '#f1f2f6';
                 statusBar.innerText = chess.in_check() ? "⚠️ Rei em Xeque! Sua vez, Jogador 2" : "Sua vez, Jogador 2";
             }
         }
