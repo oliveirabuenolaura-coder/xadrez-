@@ -1,3 +1,4 @@
+
 const board = document.getElementById('board');
 const statusBar = document.getElementById('status-bar');
 
